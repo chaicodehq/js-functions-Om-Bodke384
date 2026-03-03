@@ -64,17 +64,102 @@
  *   // => "voted!"
  */
 export function createElection(candidates) {
-  // Your code here
+  const votes = {}; // voterId -> candidateId
+  const registeredVoters = new Set();
+
+  return {
+    registerVoter(voter) {
+      if (!voter ||typeof voter !== "object" ||!voter.id ||!voter.name ||typeof voter.age !== "number" ||voter.age < 18 ||registeredVoters.has(voter.id)) {
+        return false;
+      }
+
+      registeredVoters.add(voter.id);
+      return true;
+    },
+
+    castVote(voterId, candidateId, onSuccess, onError) {
+      if (!registeredVoters.has(voterId)) {
+        return onError("Voter not registered");
+      }
+
+      const candidateExists = candidates.some(
+        c => c.id === candidateId
+      );
+
+      if (!candidateExists) {
+        return onError("Candidate not found");
+      }
+
+      if (votes[voterId]) {
+        return onError("Already voted");
+      }
+
+      votes[voterId] = candidateId;
+
+      return onSuccess({ voterId, candidateId });
+    },
+
+    getResults(sortFn) {
+      const results = candidates.map(candidate => {
+        const voteCount = Object.values(votes).filter(
+          id => id === candidate.id
+        ).length;
+
+        return {
+          id: candidate.id,
+          name: candidate.name,
+          party: candidate.party,
+          votes: voteCount
+        };
+      });
+
+      if (typeof sortFn === "function") {
+        return results.sort(sortFn);
+      }
+
+      return results.sort((a, b) => b.votes - a.votes);
+    },
+
+    getWinner() {
+      const results = this.getResults();
+
+      if (Object.values(votes).length === 0) {
+        return null;
+      }
+
+      return results[0]; // already sorted descending
+    }
+  };
 }
 
 export function createVoteValidator(rules) {
-  // Your code here
+  return function (voter) {
+    if (!voter || typeof voter !== "object") {
+      return { valid: false, reason: "Invalid voter" };
+    }
+
+    if (voter.age < rules.minAge) {
+      return { valid: false, reason: "Underage" };
+    }
+
+    if (!rules.requiredFields.every(field => field in voter)) {
+      return { valid: false, reason: "Missing required fields" };
+    }
+
+    return { valid: true, reason: null };
+  };
 }
 
-export function countVotesInRegions(regionTree) {
-  // Your code here
+export function countVotesInRegions(region) {
+  if (!region || typeof region !== "object" || typeof region.votes !== "number") {
+    return 0;
+  }
+
+  return region.votes + region.subRegions.reduce((total, subRegion) => total + countVotesInRegions(subRegion), 0);
 }
 
 export function tallyPure(currentTally, candidateId) {
   // Your code here
+  return { ...currentTally, [candidateId]: (currentTally[candidateId] || 0) + 1 };
 }
+

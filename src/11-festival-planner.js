@@ -50,4 +50,34 @@
  */
 export function createFestivalManager() {
   // Your code here
+  const festivals = [];
+
+  return {
+    addFestival(name, date, type) {
+      if (!name ||typeof date !== "string" || !["religious", "national", "cultural"].includes(type) ||festivals.some((f) => f.name === name)) return -1;
+      festivals.push({ name, date, type });
+      return festivals.length;
+    },
+    removeFestival(name) {
+      const index = festivals.findIndex((f) => f.name === name);
+      if (index === -1) return false;
+      festivals.splice(index, 1);
+      return true;
+    },
+    getAll() {
+      return [...festivals];
+    },
+    getByType(type) {
+      return festivals.filter((f) => f.type === type);
+    },
+    getUpcoming(currentDate, n = 3) {
+      return festivals
+        .filter((f) => new Date(f.date) >= new Date(currentDate))
+        .sort((a, b) => new Date(a.date) - new Date(b.date))
+        .slice(0, n);
+    },
+    getCount() {
+      return festivals.length;  
+    },
+    }
 }

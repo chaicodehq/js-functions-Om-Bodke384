@@ -53,21 +53,71 @@
  *   generatePattern(3)        // => ["*", "**", "***", "**", "*"]
  */
 export function repeatChar(char, n) {
-  // Your code here
+  if (typeof char !== "string" || char.length === 0 || n <= 0) {
+    return "";
+  }
+  return char + repeatChar(char, n - 1);
 }
 
-export function sumNestedArray(arr) {
-  // Your code here
+export function sumNestedArray(arr, index = 0) {
+  if (!Array.isArray(arr)) return 0;
+  if (index >= arr.length) return 0;
+  const current = arr[index];
+  if (Array.isArray(current)) {
+    return sumNestedArray(current) + sumNestedArray(arr, index + 1);
+  }
+  if (typeof current === "number" && !Number.isNaN(current)) {
+    return current + sumNestedArray(arr, index + 1);
+  }
+  return sumNestedArray(arr, index + 1);
 }
 
-export function flattenArray(arr) {
-  // Your code here
+export function flattenArray(arr, index = 0) {
+  if (!Array.isArray(arr)) return [];
+  if (index >= arr.length) return [];
+
+  const current = arr[index];
+
+  if (Array.isArray(current)) {
+    return [
+      ...flattenArray(current),
+      ...flattenArray(arr, index + 1)
+    ];
+  }
+  return [
+    current,
+    ...flattenArray(arr, index + 1)
+  ];
 }
 
-export function isPalindrome(str) {
-  // Your code here
+export function isPalindrome(str, start = 0, end) {
+  if (typeof str !== "string") return false;
+  if (end === undefined) {
+    str = str.toLowerCase();
+    end = str.length - 1;
+  }
+  if (start >= end) return true;
+  if (str[start] !== str[end]) return false;
+  return isPalindrome(str, start + 1, end - 1);
 }
 
 export function generatePattern(n) {
-  // Your code here
+  if (!Number.isInteger(n) || n <= 0) return [];
+
+  function buildAscending(level) {
+    if (level === 1) return ["*"];
+
+    const prev = buildAscending(level - 1);
+    return [...prev, repeatChar("*", level)];
+  }
+
+  function mirror(arr, index) {
+    if (index < 0) return [];
+    return [arr[index], ...mirror(arr, index - 1)];
+  }
+
+  const ascending = buildAscending(n);
+
+  // Important: start from n-2 (exclude last element)
+  return [...ascending, ...mirror(ascending, ascending.length - 2)];
 }
